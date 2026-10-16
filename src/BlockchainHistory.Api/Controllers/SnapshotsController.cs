@@ -1,0 +1,26 @@
+using BlockchainHistory.Application.Snapshots;
+using BlockchainHistory.Application.Snapshots.GetById;
+using Mediator;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BlockchainHistory.Api.Controllers;
+
+/// <summary>Individual stored snapshots.</summary>
+[ApiController]
+[Route("api/v1/snapshots")]
+public sealed class SnapshotsController(ISender sender) : ControllerBase
+{
+    /// <summary>Returns one stored snapshot.</summary>
+    /// <param name="id">The snapshot id.</param>
+    /// <param name="cancellationToken">Aborts the request.</param>
+    /// <response code="200">The snapshot.</response>
+    /// <response code="404">No snapshot has this id.</response>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<SnapshotDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<SnapshotDto>> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var snapshot = await sender.Send(new GetSnapshotByIdQuery(id), cancellationToken);
+        return snapshot is null ? NotFound() : snapshot;
+    }
+}

@@ -1,0 +1,74 @@
+using BlockchainHistory.Application.Snapshots.CaptureAll;
+using Mediator;
+using Microsoft.Extensions.Options;
+
+namespace BlockchainHistory.Api.BackgroundServices;
+
+/// <summary>Settings for the optional scheduled capture (section <c>Polling</c>).</summary>
+public sealed class PollingOptions
+{
+    public bool Enabled { get; set; }
+
+    public int IntervalSeconds { get; set; } = 300;
+}
+
+/// <summary>
+/// Captures every chain on a fixed interval, giving an evenly spaced history that does not depend on traffic.
+/// Off by default; a failed tick is logged and the next one still runs.
+/// </summary>
+internal sealed partial class SnapshotPollingService(
+    IServiceScopeFactory scopes,
+    IOptions<PollingOptions> options,
+    TimeProvider timeProvider,
+    ILogger<SnapshotPollingService> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (!options.Value.Enabled)
+        {
+            return;
+        }
+
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(options.Value.IntervalSeconds), timeProvider);
+        do
+        {
+            await CaptureOnceAsync(stoppingToken);
+        }
+        while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+
+    private async Task CaptureOnceAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            // Each tick gets its own scope, like an HTTP request, so it gets a fresh DbContext.
+            await using var scope = scopes.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<ISender>()
+                .Send(new CaptureAllSnapshotsCommand(), stoppingToken);
+            LogTick(result.Captured.Count, result.Failed.Count);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            LogTickFailed(ex);
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Scheduled capture stored {Captured} snapshots, {Failed} failed")]
+    private partial void LogTick(int captured, int failed);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Scheduled capture failed; will retry on the next tick")]
+    private partial void LogTickFailed(Exception exception);
+}
+
+internal static class PollingExtensions
+{
+    public static IServiceCollection AddSnapshotPolling(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<PollingOptions>()
+            .Bind(configuration.GetSection("Polling"))
+            .Validate(o => o.IntervalSeconds > 0, "Polling:IntervalSeconds must be positive.")
+            .ValidateOnStart();
+
+        return services.AddHostedService<SnapshotPollingService>();
+    }
+}

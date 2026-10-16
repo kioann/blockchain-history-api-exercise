@@ -1,23 +1,28 @@
+using BlockchainHistory.Api.Extensions;
+using BlockchainHistory.Application;
+using BlockchainHistory.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services
+    .AddApplication()
+    .AddInfrastructure(builder.Configuration)
+    .AddApiServices(builder.Configuration);
+builder.AddObservability();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+app.UseApiDocumentation();
+app.UseCors(CorsExtensions.PolicyName);
+app.UseRateLimiter();
 
 app.MapControllers();
+app.MapHealthEndpoints();
 
-app.Run();
+await app.Services.MigrateDatabaseAsync();
+await app.RunAsync();
+
+/// <summary>Entry point. Public so functional tests can host the API in memory.</summary>
+public partial class Program;
