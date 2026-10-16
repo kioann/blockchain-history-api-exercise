@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/BlockchainHistory.Api/BlockchainHistory.Api.csproj" />
+    <Project Path="src/BlockchainHistory.Application/BlockchainHistory.Application.csproj" />
+    <Project Path="src/BlockchainHistory.Domain/BlockchainHistory.Domain.csproj" />
+    <Project Path="src/BlockchainHistory.Gateway/BlockchainHistory.Gateway.csproj" />
+    <Project Path="src/BlockchainHistory.Infrastructure/BlockchainHistory.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BlockchainHistory.FunctionalTests/BlockchainHistory.FunctionalTests.csproj" />
+    <Project Path="tests/BlockchainHistory.IntegrationTests/BlockchainHistory.IntegrationTests.csproj" />
+    <Project Path="tests/BlockchainHistory.UnitTests/BlockchainHistory.UnitTests.csproj" />
+  </Folder>
+</Solution>
