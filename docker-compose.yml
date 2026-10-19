@@ -30,14 +30,17 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ReverseProxy__Clusters__blockchain-api__Destinations__api__Address: http://api:8080/
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://dashboard:18889
     ports:
       - "5000:8080"
     depends_on:
       - api
+      - dashboard
 
   dashboard:
     image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5.2
     environment:
+      # Local developer tool only: no login, so reviewers can open it straight away.
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
     ports:
       - "18888:18888"
