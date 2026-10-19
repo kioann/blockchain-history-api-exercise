@@ -1,0 +1,49 @@
+# One command runs the whole system:  docker compose up --build
+#   Gateway (front door) ... http://localhost:5000/swagger
+#   API (direct) ........... http://localhost:5080/swagger
+#   Telemetry dashboard .... http://localhost:18888  (traces, metrics, logs)
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/BlockchainHistory.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Logging__Console__FormatterName: json
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://dashboard:18889
+      # Optional: export BLOCKCYPHER_TOKEN before running for a higher BlockCypher quota.
+      BlockCypher__Token: ${BLOCKCYPHER_TOKEN:-}
+      # Set POLLING_ENABLED=true to capture every chain on a schedule.
+      Polling__Enabled: ${POLLING_ENABLED:-false}
+    volumes:
+      - api-data:/app/data
+    ports:
+      - "5080:8080"
+    depends_on:
+      - dashboard
+
+  gateway:
+    build:
+      context: .
+      dockerfile: src/BlockchainHistory.Gateway/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ReverseProxy__Clusters__blockchain-api__Destinations__api__Address: http://api:8080/
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://dashboard:18889
+    ports:
+      - "5000:8080"
+    depends_on:
+      - api
+      - dashboard
+
+  dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5.2
+    environment:
+      # Local developer tool only: no login, so reviewers can open it straight away.
+      DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
+    ports:
+      - "18888:18888"
+
+volumes:
+  api-data:
