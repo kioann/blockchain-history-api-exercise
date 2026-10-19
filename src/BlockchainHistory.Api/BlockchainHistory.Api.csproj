@@ -3,6 +3,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <UserSecretsId>blockchain-history-api</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BlockchainHistory.Application\BlockchainHistory.Application.csproj" />
