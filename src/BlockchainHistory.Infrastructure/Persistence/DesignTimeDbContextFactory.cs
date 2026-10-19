@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace BlockchainHistory.Infrastructure.Persistence;
 
-/// <summary>Lets the <c>dotnet ef</c> tool create the context to generate migrations, without starting the API.</summary>
+/// <summary>Lets dotnet ef build migrations without starting the API.</summary>
 internal sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BlockchainHistoryDbContext>
 {
     public BlockchainHistoryDbContext CreateDbContext(string[] args) =>

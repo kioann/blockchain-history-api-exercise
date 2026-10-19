@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlockchainHistory.Api.Errors;
 
-/// <summary>Turns exceptions into RFC 9457 problem details, so every error has the same JSON shape.</summary>
+/// <summary>Turns exceptions into problem details, so all errors look the same.</summary>
 internal sealed partial class GlobalExceptionHandler(
     IProblemDetailsService problemDetails, IHostEnvironment environment, ILogger<GlobalExceptionHandler> logger)
     : IExceptionHandler
@@ -45,7 +45,7 @@ internal sealed partial class GlobalExceptionHandler(
         var network = exception.Network.ToSlug();
         LogUpstreamUnavailable(exception, network);
 
-        // Clients get a fixed message; the exception and its cause are only logged.
+        // Fixed message for clients; the details go to the logs.
         return new ProblemDetails
         {
             Status = StatusCodes.Status503ServiceUnavailable,

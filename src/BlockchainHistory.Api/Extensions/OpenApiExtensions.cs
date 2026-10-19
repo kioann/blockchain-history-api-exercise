@@ -18,7 +18,7 @@ internal static class OpenApiExtensions
             return Task.CompletedTask;
         }));
 
-    /// <summary>Serves the OpenAPI document and Swagger UI at <c>/swagger</c>, unless <c>Swagger:Enabled</c> is false.</summary>
+    /// <summary>Swagger UI at /swagger, unless Swagger:Enabled is false.</summary>
     public static WebApplication UseApiDocumentation(this WebApplication app)
     {
         if (!app.Configuration.GetValue(SwaggerEnabledKey, true))

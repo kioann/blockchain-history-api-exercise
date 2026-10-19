@@ -9,7 +9,7 @@ namespace BlockchainHistory.Application;
 
 public static class DependencyInjection
 {
-    /// <summary>Registers the mediator, its pipeline (logging, then validation), validators and metrics.</summary>
+    /// <summary>Mediator with logging and validation, plus validators and metrics.</summary>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddMediator((MediatorOptions options) =>

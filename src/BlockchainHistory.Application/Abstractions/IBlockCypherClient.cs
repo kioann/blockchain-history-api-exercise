@@ -3,12 +3,12 @@ using BlockchainHistory.Domain.Snapshots;
 
 namespace BlockchainHistory.Application.Abstractions;
 
-/// <summary>Reads the current state of a chain from BlockCypher.</summary>
+/// <summary>Gets a chain's current state from BlockCypher.</summary>
 public interface IBlockCypherClient
 {
-    /// <exception cref="BlockCypherUnavailableException">The provider could not be reached or kept failing.</exception>
+    /// <exception cref="BlockCypherUnavailableException">BlockCypher couldn't be reached or kept failing.</exception>
     Task<ChainFetchResult> GetChainAsync(BlockchainNetwork network, CancellationToken cancellationToken);
 }
 
-/// <summary>The parsed chain state together with the response body exactly as received.</summary>
+/// <summary>Parsed data plus the raw response.</summary>
 public sealed record ChainFetchResult(ChainStatus Status, string RawJson);

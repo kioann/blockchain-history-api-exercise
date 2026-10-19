@@ -4,7 +4,7 @@ using BlockchainHistory.Domain.Chains;
 
 namespace BlockchainHistory.Application.Diagnostics;
 
-/// <summary>The application's trace source and the name its meter is registered under.</summary>
+/// <summary>Names used for our traces and metrics.</summary>
 public static class ApplicationDiagnostics
 {
     public const string Name = "BlockchainHistory";
@@ -12,7 +12,7 @@ public static class ApplicationDiagnostics
     public static readonly ActivitySource ActivitySource = new(Name);
 }
 
-/// <summary>Business metrics. Created through <see cref="IMeterFactory"/> so tests and hosts own the meter's lifetime.</summary>
+/// <summary>Our business metrics.</summary>
 public sealed class ApplicationMetrics
 {
     private readonly Counter<long> _snapshotsCaptured;

@@ -1,6 +1,5 @@
 namespace BlockchainHistory.Domain.Chains;
 
-/// <summary>The blockchain networks this service tracks.</summary>
 public enum BlockchainNetwork
 {
     EthMain,
@@ -10,22 +9,22 @@ public enum BlockchainNetwork
     LtcMain,
 }
 
-/// <summary>How a chain models balances, which decides how its fees are expressed.</summary>
+/// <summary>Decides how a chain reports its fees.</summary>
 public enum ChainModel
 {
-    /// <summary>Bitcoin-style unspent outputs. Fees are quoted per kilobyte.</summary>
+    /// <summary>Bitcoin-style. Fees per kB.</summary>
     Utxo,
 
-    /// <summary>Ethereum-style accounts. Fees are quoted as gas prices.</summary>
+    /// <summary>Ethereum-style. Fees as gas prices.</summary>
     Account,
 }
 
-/// <summary>Static facts about a network: its BlockCypher coin and chain, and its chain model.</summary>
+/// <summary>A supported chain and where BlockCypher serves it.</summary>
 public sealed record NetworkInfo(BlockchainNetwork Network, string Coin, string Chain, ChainModel Model)
 {
-    /// <summary>Public identifier used in URLs, e.g. <c>btc-test3</c>.</summary>
+    /// <summary>Used in our URLs, e.g. btc-test3.</summary>
     public string Slug => $"{Coin}-{Chain}";
 
-    /// <summary>BlockCypher path relative to its API root, e.g. <c>btc/test3</c>.</summary>
+    /// <summary>BlockCypher path, e.g. btc/test3.</summary>
     public string Path => $"{Coin}/{Chain}";
 }

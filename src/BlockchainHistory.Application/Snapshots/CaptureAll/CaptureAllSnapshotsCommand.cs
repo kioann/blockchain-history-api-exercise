@@ -5,10 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace BlockchainHistory.Application.Snapshots.CaptureAll;
 
-/// <summary>Fetch every supported network concurrently and store whatever succeeded.</summary>
+/// <summary>Fetch all chains at once and save the ones that worked.</summary>
 public sealed record CaptureAllSnapshotsCommand : ICommand<CaptureAllResult>;
 
-/// <summary>Snapshots that were stored, and networks that could not be fetched.</summary>
+/// <summary>What was saved and what failed.</summary>
 public sealed record CaptureAllResult(IReadOnlyList<SnapshotDto> Captured, IReadOnlyList<CaptureFailure> Failed);
 
 public sealed record CaptureFailure(string Network, string Error);
@@ -25,11 +25,11 @@ public sealed partial class CaptureAllSnapshotsHandler(
     {
         var createdAt = timeProvider.GetUtcNow();
 
-        // I/O-bound: start every request at once and await them together. No threads are blocked while waiting.
+        // Network calls, so start them all and wait together. No threads sit blocked.
         var fetches = BlockchainNetworks.All.Select(n => FetchAsync(n.Network, cancellationToken));
         var outcomes = await Task.WhenAll(fetches);
 
-        // The DbContext is not thread-safe, so snapshots are added one by one after all fetches complete.
+        // DbContext isn't thread-safe, so add the results one by one.
         var captured = new List<SnapshotDto>();
         var failed = new List<CaptureFailure>();
         foreach (var (network, fetched, error) in outcomes)

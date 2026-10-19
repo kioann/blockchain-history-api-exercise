@@ -6,10 +6,7 @@ using Polly;
 
 namespace BlockchainHistory.Infrastructure.BlockCypher;
 
-/// <summary>
-/// Typed HTTP client for BlockCypher. Retries, timeouts and the circuit breaker are applied by the
-/// resilience pipeline registered with this client, so this class only maps outcomes.
-/// </summary>
+/// <summary>Calls BlockCypher. Retries and timeouts come from the pipeline; this class just handles the result.</summary>
 internal sealed class BlockCypherClient(HttpClient http, IOptions<BlockCypherOptions> options) : IBlockCypherClient
 {
     public async Task<ChainFetchResult> GetChainAsync(BlockchainNetwork network, CancellationToken cancellationToken)
@@ -32,7 +29,7 @@ internal sealed class BlockCypherClient(HttpClient http, IOptions<BlockCypherOpt
         }
         catch (Exception ex) when (IsProviderFailure(ex, cancellationToken))
         {
-            // The message may reach API clients, so it names the kind of failure; the details stay in the inner exception.
+            // Clients may see this message, so keep the details in the inner exception.
             throw new BlockCypherUnavailableException(network, $"BlockCypher is unavailable for {info.Slug}: {Describe(ex)}", ex);
         }
     }
@@ -43,7 +40,7 @@ internal sealed class BlockCypherClient(HttpClient http, IOptions<BlockCypherOpt
         return string.IsNullOrWhiteSpace(token) ? info.Path : $"{info.Path}?token={Uri.EscapeDataString(token)}";
     }
 
-    // Caller cancellation is not a provider failure, so it propagates unchanged.
+    // If the caller cancelled, that's not BlockCypher's fault, so let it through.
     private static bool IsProviderFailure(Exception ex, CancellationToken cancellationToken) => ex switch
     {
         HttpRequestException or JsonException or ExecutionRejectedException => true,

@@ -4,7 +4,7 @@ using Mediator;
 
 namespace BlockchainHistory.Application.Snapshots.Capture;
 
-/// <summary>Fetch one network from BlockCypher now and store it as a snapshot.</summary>
+/// <summary>Fetch one chain now and save it.</summary>
 public sealed record CaptureSnapshotCommand(BlockchainNetwork Network) : ICommand<SnapshotDto>;
 
 public sealed class CaptureSnapshotHandler(
@@ -15,7 +15,7 @@ public sealed class CaptureSnapshotHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
 
-        // CreatedAt is when the request reached us, not when a possibly retried upstream call finished.
+        // Take the time first, so slow retries don't shift CreatedAt.
         var createdAt = timeProvider.GetUtcNow();
         var fetched = await client.GetChainAsync(command.Network, cancellationToken);
 

@@ -3,10 +3,9 @@ using BlockchainHistory.Application.Snapshots.GetHistory;
 
 namespace BlockchainHistory.Api.Contracts;
 
-/// <summary>Paging for history requests.</summary>
 public sealed class HistoryQueryParameters
 {
-    /// <summary>1-based page number.</summary>
+    /// <summary>Page number, starting at 1.</summary>
     [Range(1, int.MaxValue)]
     public int Page { get; init; } = 1;
 
@@ -15,10 +14,10 @@ public sealed class HistoryQueryParameters
     public int PageSize { get; init; } = 20;
 }
 
-/// <summary>A supported network.</summary>
-/// <param name="Slug">Identifier used in URLs, e.g. <c>btc-main</c>.</param>
+/// <summary>A supported chain.</summary>
+/// <param name="Slug">Used in URLs, e.g. btc-main.</param>
 /// <param name="Coin">BlockCypher coin code.</param>
 /// <param name="Chain">BlockCypher chain name.</param>
 /// <param name="Model">Utxo (fees per kB) or Account (gas prices).</param>
-/// <param name="SourceUrl">The BlockCypher endpoint snapshots are captured from.</param>
+/// <param name="SourceUrl">Where the data comes from.</param>
 public sealed record BlockchainResponse(string Slug, string Coin, string Chain, string Model, Uri SourceUrl);

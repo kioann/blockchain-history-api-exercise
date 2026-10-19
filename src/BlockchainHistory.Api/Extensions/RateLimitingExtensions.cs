@@ -10,10 +10,7 @@ internal static class RateLimitingExtensions
     private const string PermitsPerHourKey = "RateLimiting:CapturePermitsPerHour";
     private const int DefaultPermitsPerHour = 20;
 
-    /// <summary>
-    /// One shared hourly budget for API clients on the capture endpoints, so a single caller cannot use up
-    /// the BlockCypher quota. The quota itself is enforced on every outgoing call by the BlockCypher client.
-    /// </summary>
+    /// <summary>Hourly limit on capture calls, so one caller can't use up the BlockCypher quota.</summary>
     public static IServiceCollection AddCaptureRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
         var permitsPerHour = configuration.GetValue(PermitsPerHourKey, DefaultPermitsPerHour);

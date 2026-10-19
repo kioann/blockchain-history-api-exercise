@@ -7,10 +7,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BlockchainHistory.Infrastructure.Persistence;
 
-/// <summary>
-/// EF Core session over the SQLite database. Acts as the unit of work: one SaveChanges commits everything
-/// pending, then publishes the domain events raised by the saved entities.
-/// </summary>
+/// <summary>EF Core context and unit of work. Saves everything, then publishes the domain events.</summary>
 public sealed class BlockchainHistoryDbContext(DbContextOptions<BlockchainHistoryDbContext> options, IPublisher publisher)
     : DbContext(options), IUnitOfWork
 {
@@ -26,11 +23,11 @@ public sealed class BlockchainHistoryDbContext(DbContextOptions<BlockchainHistor
 
         var written = await base.SaveChangesAsync(cancellationToken);
 
-        // Publish only after the data is committed, so handlers never observe changes that were rolled back.
+        // Publish after saving, so handlers never see unsaved data.
         entities.ForEach(e => e.ClearDomainEvents());
         foreach (object domainEvent in domainEvents)
         {
-            // The object overload dispatches on the event's runtime type to its handlers.
+            // The object overload routes by the event's real type.
             await publisher.Publish(domainEvent, cancellationToken);
         }
 
@@ -44,8 +41,7 @@ public sealed class BlockchainHistoryDbContext(DbContextOptions<BlockchainHistor
     {
         ArgumentNullException.ThrowIfNull(configurationBuilder);
 
-        // SQLite has no native DateTimeOffset and cannot ORDER BY one. Storing UTC ticks keeps full precision
-        // and lets "newest first" queries sort in the database instead of in memory.
+        // SQLite can't sort DateTimeOffset. UTC ticks keep full precision and sort in the database.
         configurationBuilder.Properties<DateTimeOffset>().HaveConversion<UtcTicksConverter>();
     }
 

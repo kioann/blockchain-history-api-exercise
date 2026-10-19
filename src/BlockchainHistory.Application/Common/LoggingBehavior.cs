@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BlockchainHistory.Application.Common;
 
-/// <summary>Wraps every message in a trace span and logs how long it took.</summary>
+/// <summary>Traces every request and logs how long it took.</summary>
 public sealed partial class LoggingBehavior<TMessage, TResponse>(ILogger<LoggingBehavior<TMessage, TResponse>> logger)
     : IPipelineBehavior<TMessage, TResponse>
     where TMessage : notnull, IMessage

@@ -11,10 +11,7 @@ using NSubstitute;
 
 namespace BlockchainHistory.FunctionalTests;
 
-/// <summary>
-/// Runs the whole API in memory against a throwaway SQLite file. BlockCypher and the clock are replaced
-/// with test doubles, so tests are fast, offline and deterministic.
-/// </summary>
+/// <summary>Runs the real API in memory with a temp database. Only BlockCypher and the clock are faked.</summary>
 public sealed class BlockchainHistoryApiFactory : WebApplicationFactory<Program>
 {
     public const string AllowedOrigin = "https://allowed.example";
@@ -22,7 +19,7 @@ public sealed class BlockchainHistoryApiFactory : WebApplicationFactory<Program>
 
     private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"blockchain-history-test-{Guid.NewGuid():N}.db");
 
-    /// <summary>High by default so only the rate-limit test ever hits it.</summary>
+    /// <summary>High by default, so only the rate-limit test hits it.</summary>
     public int CapturePermitsPerHour { get; init; } = 1000;
 
     public IBlockCypherClient BlockCypher { get; } = CreateBlockCypherStub();

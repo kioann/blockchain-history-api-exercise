@@ -11,8 +11,8 @@ internal static class HealthCheckExtensions
     public const string BasePath = "/health";
 
     /// <summary>
-    /// <c>/health/live</c>: the process is up (runs no checks, so a slow database never restarts the app).
-    /// <c>/health/ready</c>: dependencies tagged for readiness (the database) are reachable.
+    /// /health/live: the app is running (no checks, so a slow database never restarts it).
+    /// /health/ready: the database is reachable.
     /// </summary>
     public static WebApplication MapHealthEndpoints(this WebApplication app)
     {

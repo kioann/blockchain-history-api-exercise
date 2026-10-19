@@ -2,7 +2,7 @@ using BlockchainHistory.Domain.Chains;
 
 namespace BlockchainHistory.Infrastructure.BlockCypher;
 
-/// <summary>Settings bound from the <c>BlockCypher</c> configuration section.</summary>
+/// <summary>Settings from the BlockCypher config section.</summary>
 public sealed class BlockCypherOptions
 {
     public const string SectionName = "BlockCypher";
@@ -10,25 +10,25 @@ public sealed class BlockCypherOptions
     /// <summary>API root, ending with a slash.</summary>
     public string BaseUrl { get; set; } = "https://api.blockcypher.com/v1/";
 
-    /// <summary>Optional API token. Supply it via user-secrets or the BlockCypher__Token environment variable.</summary>
+    /// <summary>Optional. Set it with user-secrets or BlockCypher__Token, never in a file.</summary>
     public string? Token { get; set; }
 
-    /// <summary>Timeout for a single attempt.</summary>
+    /// <summary>Timeout per attempt.</summary>
     public int TimeoutSeconds { get; set; } = 10;
 
-    /// <summary>Retries after the first attempt, for transient failures (5xx, 408, 429, timeouts).</summary>
+    /// <summary>Extra attempts on temporary errors (5xx, 429, timeouts).</summary>
     public int RetryCount { get; set; } = 2;
 
-    /// <summary>Base delay between retries. Grows exponentially, with jitter.</summary>
+    /// <summary>First retry delay. Grows with each retry, with jitter.</summary>
     public int RetryDelayMilliseconds { get; set; } = 500;
 
-    /// <summary>Requests per second allowed by the account (free tier: 3). Extra requests wait.</summary>
+    /// <summary>Free tier: 3. Extra requests wait.</summary>
     public int RequestsPerSecond { get; set; } = 3;
 
-    /// <summary>Requests per hour allowed by the account (free tier: 100). Extra requests are refused.</summary>
+    /// <summary>Free tier: 100. Extra requests are refused.</summary>
     public int RequestsPerHour { get; set; } = 100;
 
-    /// <summary>The BlockCypher endpoint a network's snapshots are captured from.</summary>
+    /// <summary>Where a chain's data comes from.</summary>
     public Uri SourceUrl(NetworkInfo network)
     {
         ArgumentNullException.ThrowIfNull(network);

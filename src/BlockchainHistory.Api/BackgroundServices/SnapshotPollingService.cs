@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace BlockchainHistory.Api.BackgroundServices;
 
-/// <summary>Settings for the optional scheduled capture (section <c>Polling</c>).</summary>
+/// <summary>Settings for the optional scheduled capture.</summary>
 public sealed class PollingOptions
 {
     public const string SectionName = "Polling";
@@ -14,10 +14,7 @@ public sealed class PollingOptions
     public int IntervalSeconds { get; set; } = 300;
 }
 
-/// <summary>
-/// Captures every chain on a fixed interval, giving an evenly spaced history that does not depend on traffic.
-/// Off by default; a failed tick is logged and the next one still runs.
-/// </summary>
+/// <summary>Captures all chains on a timer, so history is evenly spaced. Off by default; a failed run doesn't stop the next.</summary>
 internal sealed partial class SnapshotPollingService(
     IServiceScopeFactory scopes,
     IOptions<PollingOptions> options,
@@ -43,7 +40,7 @@ internal sealed partial class SnapshotPollingService(
     {
         try
         {
-            // Each tick gets its own scope, like an HTTP request, so it gets a fresh DbContext.
+            // New scope per run, so each gets a fresh DbContext.
             await using var scope = scopes.CreateAsyncScope();
             var result = await scope.ServiceProvider.GetRequiredService<ISender>()
                 .Send(new CaptureAllSnapshotsCommand(), stoppingToken);

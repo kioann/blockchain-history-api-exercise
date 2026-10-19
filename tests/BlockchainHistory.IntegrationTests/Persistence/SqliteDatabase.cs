@@ -6,10 +6,7 @@ using NSubstitute;
 
 namespace BlockchainHistory.IntegrationTests.Persistence;
 
-/// <summary>
-/// A real SQLite database held in memory for one test. The connection stays open for the test's lifetime,
-/// because an in-memory SQLite database disappears when its last connection closes.
-/// </summary>
+/// <summary>A real in-memory SQLite database for one test. The connection stays open, or the database disappears.</summary>
 internal sealed class SqliteDatabase : IAsyncDisposable
 {
     private readonly SqliteConnection _connection = new("DataSource=:memory:");

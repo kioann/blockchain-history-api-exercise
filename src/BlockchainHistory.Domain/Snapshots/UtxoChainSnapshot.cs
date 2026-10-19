@@ -2,7 +2,7 @@ using BlockchainHistory.Domain.Chains;
 
 namespace BlockchainHistory.Domain.Snapshots;
 
-/// <summary>Snapshot of a Bitcoin-style chain (BTC, LTC, DASH). Fees are in the coin's smallest unit per kB.</summary>
+/// <summary>Bitcoin-style snapshot (BTC, LTC, DASH). Fees are per kB.</summary>
 public sealed class UtxoChainSnapshot : BlockchainSnapshot
 {
     internal UtxoChainSnapshot(BlockchainNetwork network, ChainStatus status, string rawJson, DateTimeOffset createdAt)

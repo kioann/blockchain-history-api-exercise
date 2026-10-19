@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace BlockchainHistory.Domain.Chains;
 
-/// <summary>Registry of supported networks and lookups by enum or slug.</summary>
+/// <summary>The supported chains, with lookups by enum or slug.</summary>
 public static class BlockchainNetworks
 {
     public static IReadOnlyList<NetworkInfo> All { get; } =
@@ -14,7 +14,7 @@ public static class BlockchainNetworks
         new(BlockchainNetwork.LtcMain, "ltc", "main", ChainModel.Utxo),
     ];
 
-    /// <summary>Comma-separated list of every supported slug, for error messages.</summary>
+    /// <summary>All slugs as one string, for error messages.</summary>
     public static string SupportedSlugs { get; } = string.Join(", ", All.Select(n => n.Slug));
 
     private static readonly Dictionary<BlockchainNetwork, NetworkInfo> ByNetwork = All.ToDictionary(n => n.Network);

@@ -3,7 +3,7 @@ using Mediator;
 
 namespace BlockchainHistory.Application.Snapshots.GetById;
 
-/// <summary>A single stored snapshot, or null when the id is unknown.</summary>
+/// <summary>One snapshot, or null if not found.</summary>
 public sealed record GetSnapshotByIdQuery(Guid Id) : IQuery<SnapshotDto?>;
 
 public sealed class GetSnapshotByIdHandler(ISnapshotRepository repository)

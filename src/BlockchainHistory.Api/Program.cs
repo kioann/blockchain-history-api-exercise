@@ -24,5 +24,5 @@ app.MapHealthEndpoints();
 await app.Services.MigrateDatabaseAsync();
 await app.RunAsync();
 
-/// <summary>Entry point. Public so functional tests can host the API in memory.</summary>
+/// <summary>Public so tests can host the API.</summary>
 public partial class Program;

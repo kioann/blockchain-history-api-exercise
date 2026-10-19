@@ -3,10 +3,7 @@ using BlockchainHistory.Domain.Chains;
 
 namespace BlockchainHistory.Api.Contracts;
 
-/// <summary>
-/// Validates a route value against the supported network slugs (case-insensitive). With [ApiController],
-/// a failure automatically becomes a 400 response before the action runs.
-/// </summary>
+/// <summary>Checks the chain in the URL is supported. With [ApiController], a bad value becomes a 400 automatically.</summary>
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
 internal sealed class SupportedBlockchainAttribute : ValidationAttribute
 {

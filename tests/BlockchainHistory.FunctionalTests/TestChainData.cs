@@ -5,7 +5,7 @@ using BlockchainHistory.Domain.Snapshots;
 
 namespace BlockchainHistory.FunctionalTests;
 
-/// <summary>Plausible BlockCypher answers for every network, as the stubbed client returns them.</summary>
+/// <summary>Fake BlockCypher answers for each chain.</summary>
 internal static class TestChainData
 {
     public static ChainFetchResult For(BlockchainNetwork network)

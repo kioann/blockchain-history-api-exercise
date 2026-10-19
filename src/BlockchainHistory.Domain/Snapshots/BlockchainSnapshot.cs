@@ -3,10 +3,7 @@ using BlockchainHistory.Domain.Common;
 
 namespace BlockchainHistory.Domain.Snapshots;
 
-/// <summary>
-/// One captured reading of a chain's state. Fields shared by every chain live here;
-/// chain-model-specific fees live on the subclasses.
-/// </summary>
+/// <summary>One saved reading of a chain. Shared fields live here; fees live in the subclasses.</summary>
 public abstract class BlockchainSnapshot : Entity
 {
     protected BlockchainSnapshot(BlockchainNetwork network, ChainStatus status, string rawJson, DateTimeOffset createdAt)
@@ -28,7 +25,7 @@ public abstract class BlockchainSnapshot : Entity
         CreatedAt = createdAt;
     }
 
-    /// <summary>Used by EF Core when materialising rows.</summary>
+    /// <summary>For EF Core.</summary>
     protected BlockchainSnapshot()
     {
     }
@@ -46,13 +43,13 @@ public abstract class BlockchainSnapshot : Entity
     public long? LastForkHeight { get; private set; }
     public string? LastForkHash { get; private set; }
 
-    /// <summary>The provider's response exactly as received.</summary>
+    /// <summary>BlockCypher's response, untouched.</summary>
     public string RawJson { get; private set; } = string.Empty;
 
-    /// <summary>When this service captured the snapshot (UTC).</summary>
+    /// <summary>When we captured it (UTC).</summary>
     public DateTimeOffset CreatedAt { get; private set; }
 
-    /// <summary>Creates the snapshot subtype that matches the network's chain model.</summary>
+    /// <summary>Builds the right snapshot type for the chain.</summary>
     public static BlockchainSnapshot Capture(
         BlockchainNetwork network, ChainStatus status, string rawJson, DateTimeOffset createdAt)
     {

@@ -2,12 +2,12 @@ using System.Text.Json;
 
 namespace BlockchainHistory.Application.Snapshots;
 
-/// <summary>A captured snapshot as returned by the API.</summary>
-/// <param name="Network">The network slug, e.g. <c>btc-main</c>.</param>
-/// <param name="UtxoFees">Fees per kB for Bitcoin-style chains; null for Ethereum.</param>
-/// <param name="EthereumFees">Gas prices and fees in wei for Ethereum; null for Bitcoin-style chains.</param>
-/// <param name="CreatedAt">When this service captured the snapshot (UTC).</param>
-/// <param name="Raw">The provider's response exactly as received.</param>
+/// <summary>A snapshot as the API returns it.</summary>
+/// <param name="Network">Chain slug, e.g. btc-main.</param>
+/// <param name="UtxoFees">Fees per kB (Bitcoin-style chains only).</param>
+/// <param name="EthereumFees">Gas prices in wei (Ethereum only).</param>
+/// <param name="CreatedAt">When we captured it (UTC).</param>
+/// <param name="Raw">BlockCypher's original response.</param>
 public sealed record SnapshotDto(
     Guid Id,
     string Network,

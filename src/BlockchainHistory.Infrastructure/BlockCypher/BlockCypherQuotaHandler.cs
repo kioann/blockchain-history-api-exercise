@@ -3,10 +3,7 @@ using Polly.RateLimiting;
 
 namespace BlockchainHistory.Infrastructure.BlockCypher;
 
-/// <summary>
-/// The account's request allowance, shared by every BlockCypher call in the process. Requests over the
-/// per-second rate wait their turn; requests over the hourly budget are refused.
-/// </summary>
+/// <summary>Our BlockCypher allowance, shared by all calls. Over the per-second limit waits; over the hourly limit is refused.</summary>
 internal sealed class BlockCypherQuota(BlockCypherOptions options) : IDisposable
 {
     public RateLimiter PerSecond { get; } = new TokenBucketRateLimiter(new TokenBucketRateLimiterOptions
@@ -32,10 +29,7 @@ internal sealed class BlockCypherQuota(BlockCypherOptions options) : IDisposable
     }
 }
 
-/// <summary>
-/// Runs inside the resilience pipeline, so every attempt is counted: user captures, scheduled captures and retries.
-/// A refusal is not retried and surfaces as "BlockCypher unavailable".
-/// </summary>
+/// <summary>Applies the quota to every attempt, retries included. A refusal isn't retried.</summary>
 internal sealed class BlockCypherQuotaHandler(BlockCypherQuota quota) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

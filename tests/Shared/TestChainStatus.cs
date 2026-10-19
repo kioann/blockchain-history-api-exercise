@@ -2,7 +2,7 @@ using BlockchainHistory.Domain.Snapshots;
 
 namespace BlockchainHistory.Tests.Shared;
 
-/// <summary>Real BTC and ETH chain states captured from BlockCypher on 2026-10-16 (they match the integration JSON fixtures).</summary>
+/// <summary>Real BTC and ETH data from BlockCypher (same as the JSON fixtures).</summary>
 internal static class TestChainStatus
 {
     public static ChainStatus Utxo() => new()

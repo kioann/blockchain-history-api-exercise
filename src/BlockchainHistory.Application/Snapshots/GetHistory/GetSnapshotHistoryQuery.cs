@@ -6,7 +6,7 @@ using Mediator;
 
 namespace BlockchainHistory.Application.Snapshots.GetHistory;
 
-/// <summary>One page of a network's stored snapshots, newest first.</summary>
+/// <summary>One page of a chain's history, newest first.</summary>
 public sealed record GetSnapshotHistoryQuery(BlockchainNetwork Network, int Page, int PageSize)
     : IQuery<PagedResult<SnapshotDto>>;
 

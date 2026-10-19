@@ -2,5 +2,5 @@ using Mediator;
 
 namespace BlockchainHistory.Domain.Common;
 
-/// <summary>Something meaningful that happened in the domain. Published after the change is saved.</summary>
+/// <summary>Something that happened. Published after saving.</summary>
 public interface IDomainEvent : INotification;

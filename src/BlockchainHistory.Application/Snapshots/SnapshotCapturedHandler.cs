@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BlockchainHistory.Application.Snapshots;
 
-/// <summary>Reacts to a stored snapshot: counts it in the metrics and logs it.</summary>
+/// <summary>Counts and logs each saved snapshot.</summary>
 public sealed partial class SnapshotCapturedHandler(ApplicationMetrics metrics, ILogger<SnapshotCapturedHandler> logger)
     : INotificationHandler<SnapshotCaptured>
 {

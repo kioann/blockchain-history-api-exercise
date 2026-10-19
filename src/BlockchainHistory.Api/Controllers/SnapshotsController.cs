@@ -5,18 +5,17 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlockchainHistory.Api.Controllers;
 
-/// <summary>Individual stored snapshots.</summary>
+/// <summary>Single snapshots.</summary>
 [ApiController]
 [Route("api/v1/snapshots")]
 public sealed class SnapshotsController(ISender sender) : ControllerBase
 {
     public const string GetByIdRoute = "GetSnapshotById";
 
-    /// <summary>Returns one stored snapshot.</summary>
+    /// <summary>Gets one snapshot.</summary>
     /// <param name="id">The snapshot id.</param>
-    /// <param name="cancellationToken">Aborts the request.</param>
     /// <response code="200">The snapshot.</response>
-    /// <response code="404">No snapshot has this id.</response>
+    /// <response code="404">Not found.</response>
     [HttpGet("{id:guid}", Name = GetByIdRoute)]
     [ProducesResponseType<SnapshotDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

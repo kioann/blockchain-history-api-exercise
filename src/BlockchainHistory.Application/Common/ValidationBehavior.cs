@@ -3,7 +3,7 @@ using Mediator;
 
 namespace BlockchainHistory.Application.Common;
 
-/// <summary>Runs every registered validator for a message before its handler, and stops on failure.</summary>
+/// <summary>Validates every request before its handler runs.</summary>
 public sealed class ValidationBehavior<TMessage, TResponse>(IEnumerable<IValidator<TMessage>> validators)
     : IPipelineBehavior<TMessage, TResponse>
     where TMessage : notnull, IMessage

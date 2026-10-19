@@ -6,7 +6,7 @@ namespace BlockchainHistory.Application.Snapshots;
 
 internal static class SnapshotRepositoryExtensions
 {
-    /// <summary>Creates the snapshot for fetched data, queues it for saving, and returns it as a DTO.</summary>
+    /// <summary>Builds a snapshot, adds it for saving, and returns its DTO.</summary>
     public static SnapshotDto AddCaptured(
         this ISnapshotRepository repository, BlockchainNetwork network, ChainFetchResult fetched, DateTimeOffset createdAt)
     {

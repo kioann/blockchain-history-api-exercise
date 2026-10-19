@@ -1,6 +1,4 @@
-// API gateway: a single public entry point that forwards to the backend API.
-// Routes and destinations live in configuration (ReverseProxy section), so new services
-// can be added behind the same front door without code changes.
+// API gateway: one front door for the API. Routes live in config, so adding a service needs no code.
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddReverseProxy()

@@ -1,6 +1,6 @@
 namespace BlockchainHistory.Domain.Common;
 
-/// <summary>Base class for objects with an identity. Collects domain events until they are published.</summary>
+/// <summary>Base for anything with an Id. Holds domain events until they're published.</summary>
 public abstract class Entity
 {
     private readonly List<IDomainEvent> _domainEvents = [];

@@ -11,10 +11,7 @@ internal static class ObservabilityExtensions
     private const string ServiceName = "blockchain-history-api";
     private const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
 
-    /// <summary>
-    /// OpenTelemetry traces, metrics and logs. Exported over OTLP when <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> is set
-    /// (for example to the Aspire dashboard in docker-compose), otherwise collected but not exported.
-    /// </summary>
+    /// <summary>Traces, metrics and logs via OpenTelemetry. Sent over OTLP when OTEL_EXPORTER_OTLP_ENDPOINT is set.</summary>
     public static WebApplicationBuilder AddObservability(this WebApplicationBuilder builder)
     {
         builder.Logging.AddOpenTelemetry(logging =>

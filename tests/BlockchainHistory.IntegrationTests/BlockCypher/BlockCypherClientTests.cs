@@ -9,9 +9,7 @@ using WireMock.Server;
 
 namespace BlockchainHistory.IntegrationTests.BlockCypher;
 
-/// <summary>
-/// Exercises the real HTTP client, including its resilience pipeline, against a local fake BlockCypher server.
-/// </summary>
+/// <summary>The real client, retries included, against a fake BlockCypher server.</summary>
 public sealed class BlockCypherClientTests : IDisposable
 {
     private readonly WireMockServer _server = WireMockServer.Start();
@@ -146,7 +144,7 @@ public sealed class BlockCypherClientTests : IDisposable
     public async Task GetChain_BurstAboveThePerSecondLimit_IsQueuedNotRejected()
     {
         Respond("/btc/main", 200, MinimalBody("BTC.main"));
-        // Warm the fake server up first: while it starts it queues requests and stamps them all at once.
+        // Warm up the fake server first; while starting it stamps queued requests with the same time.
         using (var warmUp = new HttpClient())
         {
             await warmUp.GetAsync(new Uri(_server.Url + "/btc/main"), Ct);
@@ -157,7 +155,7 @@ public sealed class BlockCypherClientTests : IDisposable
 
         await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => client.GetChainAsync(BlockchainNetwork.BtcMain, Ct)));
 
-        // All five arrive, but spread over time: only two may be sent in the first second.
+        // All five arrive, but only two may go in the first second.
         var arrivals = _server.LogEntries.Select(e => e.RequestMessage!.DateTime).Order().ToList();
         Assert.Equal(5, arrivals.Count);
         Assert.True(

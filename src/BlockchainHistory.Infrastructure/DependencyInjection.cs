@@ -15,10 +15,10 @@ public static class DependencyInjection
     public const string ConnectionStringName = "BlockchainHistory";
     public const string DefaultConnectionString = "Data Source=data/blockchain-history.db";
 
-    /// <summary>Health checks with this tag must pass before the service reports ready.</summary>
+    /// <summary>Checks with this tag decide whether we're ready.</summary>
     public const string ReadinessTag = "ready";
 
-    /// <summary>Registers the database, repository, unit of work, BlockCypher client and the database health check.</summary>
+    /// <summary>Database, repository, BlockCypher client and the database health check.</summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString(ConnectionStringName) ?? DefaultConnectionString;
@@ -32,10 +32,7 @@ public static class DependencyInjection
         return services;
     }
 
-    /// <summary>
-    /// Registers the typed BlockCypher client with retries (exponential + jitter), timeouts, a circuit breaker,
-    /// and the account quota applied to every attempt.
-    /// </summary>
+    /// <summary>BlockCypher client with retries, timeouts, a circuit breaker and the quota.</summary>
     public static IServiceCollection AddBlockCypherClient(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<BlockCypherOptions>()
@@ -48,7 +45,7 @@ public static class DependencyInjection
         var client = services.AddHttpClient<IBlockCypherClient, BlockCypherClient>((sp, http) =>
             http.BaseAddress = new Uri(sp.GetRequiredService<IOptions<BlockCypherOptions>>().Value.BaseUrl));
 
-        // Handlers added after the resilience handler sit inside it, so the quota sees every retry attempt.
+        // Added after the resilience handler so it runs inside it and counts every retry.
         client.AddStandardResilienceHandler()
             .Configure((HttpStandardResilienceOptions resilience, IServiceProvider sp) =>
             {
@@ -68,7 +65,7 @@ public static class DependencyInjection
         return services;
     }
 
-    /// <summary>Applies pending migrations, creating the SQLite file's folder first if needed.</summary>
+    /// <summary>Creates the data folder if needed, then applies migrations.</summary>
     public static async Task MigrateDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
     {
         await using var scope = services.CreateAsyncScope();

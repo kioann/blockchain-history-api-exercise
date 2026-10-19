@@ -5,10 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BlockchainHistory.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Maps the snapshot hierarchy to one table (table-per-hierarchy). A discriminator column records
-/// whether each row is a Bitcoin-style or an Ethereum-style snapshot.
-/// </summary>
+/// <summary>Both snapshot types in one table, with a ChainModel column to tell them apart.</summary>
 internal sealed class BlockchainSnapshotConfiguration : IEntityTypeConfiguration<BlockchainSnapshot>
 {
     public void Configure(EntityTypeBuilder<BlockchainSnapshot> builder)
@@ -32,7 +29,7 @@ internal sealed class BlockchainSnapshotConfiguration : IEntityTypeConfiguration
         builder.Property(s => s.PreviousUrl).HasMaxLength(512);
         builder.Property(s => s.RawJson).IsRequired();
 
-        // Serves "history of one network, newest first" straight from the index.
+        // Matches the history query: one chain, newest first.
         builder.HasIndex(s => new { s.Network, s.CreatedAt, s.Id })
             .IsDescending(false, true, true)
             .HasDatabaseName("IX_Snapshots_Network_CreatedAt");

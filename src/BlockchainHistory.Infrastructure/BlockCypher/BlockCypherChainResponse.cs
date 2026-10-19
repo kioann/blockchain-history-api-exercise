@@ -3,10 +3,7 @@ using BlockchainHistory.Domain.Snapshots;
 
 namespace BlockchainHistory.Infrastructure.BlockCypher;
 
-/// <summary>
-/// BlockCypher's <c>GET /v1/{coin}/{chain}</c> response. Required members fail deserialisation when missing;
-/// fee and fork fields are optional because they differ per chain.
-/// </summary>
+/// <summary>BlockCypher's JSON. Missing required fields fail parsing; fee fields differ per chain.</summary>
 internal sealed record BlockCypherChainResponse
 {
     public required string Name { get; init; }
@@ -57,10 +54,7 @@ internal sealed record BlockCypherChainResponse
     };
 }
 
-/// <summary>
-/// Compile-time JSON serialisation metadata: no reflection, fewer allocations.
-/// Nullable annotations are enforced, so a <c>null</c> in a required field fails parsing instead of reaching the database.
-/// </summary>
+/// <summary>Source-generated JSON parsing. Nulls in required fields are rejected.</summary>
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, RespectNullableAnnotations = true)]
 [JsonSerializable(typeof(BlockCypherChainResponse))]
 internal sealed partial class BlockCypherJsonContext : JsonSerializerContext;

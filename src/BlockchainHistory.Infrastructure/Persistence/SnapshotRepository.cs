@@ -13,7 +13,7 @@ internal sealed class SnapshotRepository(BlockchainHistoryDbContext db) : ISnaps
     public async Task<PagedResult<BlockchainSnapshot>> GetHistoryAsync(
         BlockchainNetwork network, int page, int pageSize, CancellationToken cancellationToken)
     {
-        // Read-only: no change tracking needed, which saves memory and time.
+        // Read-only, so skip change tracking.
         var query = db.Snapshots.AsNoTracking().Where(s => s.Network == network);
 
         var total = await query.CountAsync(cancellationToken);

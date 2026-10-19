@@ -2,7 +2,7 @@ using BlockchainHistory.Domain.Chains;
 
 namespace BlockchainHistory.Domain.Snapshots;
 
-/// <summary>Snapshot of an Ethereum-style chain. Gas prices and fees are in wei.</summary>
+/// <summary>Ethereum snapshot. Gas prices are in wei.</summary>
 public sealed class EthereumSnapshot : BlockchainSnapshot
 {
     internal EthereumSnapshot(BlockchainNetwork network, ChainStatus status, string rawJson, DateTimeOffset createdAt)

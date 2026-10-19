@@ -1,9 +1,6 @@
 namespace BlockchainHistory.Domain.Snapshots;
 
-/// <summary>
-/// The state of a chain as reported by a provider, independent of the provider's wire format.
-/// Fee fields are nullable because each chain model reports only its own kind of fee.
-/// </summary>
+/// <summary>Chain data from the provider, before it becomes a snapshot. Each chain fills in only its own fee fields.</summary>
 public sealed record ChainStatus
 {
     public required string Name { get; init; }
