@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restore first, from project files only, so this layer is cached until a dependency changes.
-COPY global.json nuget.config Directory.Build.props Directory.Packages.props ./
+COPY global.json nuget.config .editorconfig Directory.Build.props Directory.Packages.props ./
 COPY src/BlockchainHistory.Domain/BlockchainHistory.Domain.csproj src/BlockchainHistory.Domain/
 COPY src/BlockchainHistory.Application/BlockchainHistory.Application.csproj src/BlockchainHistory.Application/
 COPY src/BlockchainHistory.Infrastructure/BlockchainHistory.Infrastructure.csproj src/BlockchainHistory.Infrastructure/

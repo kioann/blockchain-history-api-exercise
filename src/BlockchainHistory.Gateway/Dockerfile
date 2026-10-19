@@ -3,7 +3,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY global.json nuget.config Directory.Build.props Directory.Packages.props ./
+COPY global.json nuget.config .editorconfig Directory.Build.props Directory.Packages.props ./
 COPY src/BlockchainHistory.Gateway/BlockchainHistory.Gateway.csproj src/BlockchainHistory.Gateway/
 RUN dotnet restore src/BlockchainHistory.Gateway/BlockchainHistory.Gateway.csproj
 
