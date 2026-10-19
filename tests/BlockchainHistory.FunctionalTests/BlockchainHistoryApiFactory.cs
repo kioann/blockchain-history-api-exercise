@@ -18,6 +18,7 @@ namespace BlockchainHistory.FunctionalTests;
 public sealed class BlockchainHistoryApiFactory : WebApplicationFactory<Program>
 {
     public const string AllowedOrigin = "https://allowed.example";
+    public const string BlockCypherBaseUrl = "https://blockcypher.test/v1/";
 
     private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"blockchain-history-test-{Guid.NewGuid():N}.db");
 
@@ -35,6 +36,7 @@ public sealed class BlockchainHistoryApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("RateLimiting:CapturePermitsPerHour", CapturePermitsPerHour.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("Cors:AllowedOrigins:0", AllowedOrigin);
         builder.UseSetting("Polling:Enabled", "false");
+        builder.UseSetting("BlockCypher:BaseUrl", BlockCypherBaseUrl);
 
         builder.ConfigureTestServices(services =>
         {

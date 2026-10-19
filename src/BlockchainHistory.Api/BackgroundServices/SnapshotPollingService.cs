@@ -7,6 +7,8 @@ namespace BlockchainHistory.Api.BackgroundServices;
 /// <summary>Settings for the optional scheduled capture (section <c>Polling</c>).</summary>
 public sealed class PollingOptions
 {
+    public const string SectionName = "Polling";
+
     public bool Enabled { get; set; }
 
     public int IntervalSeconds { get; set; } = 300;
@@ -65,8 +67,8 @@ internal static class PollingExtensions
     public static IServiceCollection AddSnapshotPolling(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<PollingOptions>()
-            .Bind(configuration.GetSection("Polling"))
-            .Validate(o => o.IntervalSeconds > 0, "Polling:IntervalSeconds must be positive.")
+            .Bind(configuration.GetSection(PollingOptions.SectionName))
+            .Validate(o => o.IntervalSeconds > 0, $"{PollingOptions.SectionName}:IntervalSeconds must be positive.")
             .ValidateOnStart();
 
         return services.AddHostedService<SnapshotPollingService>();

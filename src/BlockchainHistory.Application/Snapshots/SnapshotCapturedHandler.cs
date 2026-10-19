@@ -15,7 +15,7 @@ public sealed partial class SnapshotCapturedHandler(ApplicationMetrics metrics, 
         ArgumentNullException.ThrowIfNull(notification);
 
         metrics.SnapshotCaptured(notification.Network);
-        var slug = BlockchainNetworks.Get(notification.Network).Slug;
+        var slug = notification.Network.ToSlug();
         LogCaptured(slug, notification.Height, notification.SnapshotId);
         return ValueTask.CompletedTask;
     }

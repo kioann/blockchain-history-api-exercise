@@ -9,4 +9,8 @@
   <ItemGroup>
     <None Include="Fixtures\**\*.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\TestChainStatus.cs" Link="Shared\TestChainStatus.cs" />
+    <Using Include="BlockchainHistory.Tests.Shared" />
+  </ItemGroup>
 </Project>

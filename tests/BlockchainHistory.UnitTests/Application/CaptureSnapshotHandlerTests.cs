@@ -15,11 +15,26 @@ public sealed class CaptureSnapshotHandlerTests
     private readonly IBlockCypherClient _client = Substitute.For<IBlockCypherClient>();
     private readonly ISnapshotRepository _repository = Substitute.For<ISnapshotRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = new(Now);
     private readonly CaptureSnapshotHandler _handler;
 
     public CaptureSnapshotHandlerTests()
     {
-        _handler = new CaptureSnapshotHandler(_client, _repository, _unitOfWork, new FakeTimeProvider(Now));
+        _handler = new CaptureSnapshotHandler(_client, _repository, _unitOfWork, _clock);
+    }
+
+    [Fact]
+    public async Task Handle_StampsCreatedAtWhenTheRequestArrives_NotAfterASlowFetch()
+    {
+        _client.GetChainAsync(BlockchainNetwork.BtcMain, Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            _clock.Advance(TimeSpan.FromSeconds(30));
+            return new ChainFetchResult(TestChainStatus.Utxo(), "{}");
+        });
+
+        var dto = await _handler.Handle(new CaptureSnapshotCommand(BlockchainNetwork.BtcMain), TestContext.Current.CancellationToken);
+
+        Assert.Equal(Now, dto.CreatedAt);
     }
 
     [Fact]

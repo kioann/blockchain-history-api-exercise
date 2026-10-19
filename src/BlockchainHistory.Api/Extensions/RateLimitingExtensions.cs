@@ -7,14 +7,16 @@ namespace BlockchainHistory.Api.Extensions;
 internal static class RateLimitingExtensions
 {
     public const string CapturePolicy = "capture";
+    private const string PermitsPerHourKey = "RateLimiting:CapturePermitsPerHour";
+    private const int DefaultPermitsPerHour = 20;
 
     /// <summary>
-    /// One shared hourly budget for the endpoints that call BlockCypher. The free tier allows 100 calls an hour,
-    /// and a capture-all spends 5, so the default of 20 captures an hour can never exceed it.
+    /// One shared hourly budget for API clients on the capture endpoints, so a single caller cannot use up
+    /// the BlockCypher quota. The quota itself is enforced on every outgoing call by the BlockCypher client.
     /// </summary>
     public static IServiceCollection AddCaptureRateLimiting(this IServiceCollection services, IConfiguration configuration)
     {
-        var permitsPerHour = configuration.GetValue("RateLimiting:CapturePermitsPerHour", 20);
+        var permitsPerHour = configuration.GetValue(PermitsPerHourKey, DefaultPermitsPerHour);
 
         return services.AddRateLimiter(options =>
         {

@@ -28,7 +28,7 @@ public sealed class BlockCypherClientTests : IDisposable
 
         var result = await CreateClient().GetChainAsync(BlockchainNetwork.EthMain, Ct);
 
-        Assert.Equal(TestData.Ethereum(), result.Status);
+        Assert.Equal(TestChainStatus.Ethereum(), result.Status);
         Assert.Equal(body, result.RawJson);
     }
 
@@ -39,7 +39,7 @@ public sealed class BlockCypherClientTests : IDisposable
 
         var result = await CreateClient().GetChainAsync(BlockchainNetwork.BtcMain, Ct);
 
-        Assert.Equal(TestData.Utxo(), result.Status);
+        Assert.Equal(TestChainStatus.Utxo(), result.Status);
     }
 
     [Fact]
@@ -120,6 +120,51 @@ public sealed class BlockCypherClientTests : IDisposable
             () => CreateClient().GetChainAsync(BlockchainNetwork.EthMain, Ct));
     }
 
+    [Fact]
+    public async Task GetChain_NullInARequiredField_ThrowsUnavailable()
+    {
+        Respond("/btc/main", 200, MinimalBody("BTC.main").Replace("\"hash\":\"h\"", "\"hash\":null", StringComparison.Ordinal));
+
+        await Assert.ThrowsAsync<BlockCypherUnavailableException>(
+            () => CreateClient().GetChainAsync(BlockchainNetwork.BtcMain, Ct));
+    }
+
+    [Fact]
+    public async Task GetChain_HourlyBudgetUsedUp_FailsWithoutCallingBlockCypher()
+    {
+        Respond("/btc/main", 200, MinimalBody("BTC.main"));
+        var client = CreateClient(requestsPerHour: 2);
+
+        await client.GetChainAsync(BlockchainNetwork.BtcMain, Ct);
+        await client.GetChainAsync(BlockchainNetwork.BtcMain, Ct);
+        await Assert.ThrowsAsync<BlockCypherUnavailableException>(() => client.GetChainAsync(BlockchainNetwork.BtcMain, Ct));
+
+        Assert.Equal(2, _server.LogEntries.Count);
+    }
+
+    [Fact]
+    public async Task GetChain_BurstAboveThePerSecondLimit_IsQueuedNotRejected()
+    {
+        Respond("/btc/main", 200, MinimalBody("BTC.main"));
+        // Warm the fake server up first: while it starts it queues requests and stamps them all at once.
+        using (var warmUp = new HttpClient())
+        {
+            await warmUp.GetAsync(new Uri(_server.Url + "/btc/main"), Ct);
+        }
+
+        _server.ResetLogEntries();
+        var client = CreateClient(requestsPerSecond: 2);
+
+        await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => client.GetChainAsync(BlockchainNetwork.BtcMain, Ct)));
+
+        // All five arrive, but spread over time: only two may be sent in the first second.
+        var arrivals = _server.LogEntries.Select(e => e.RequestMessage!.DateTime).Order().ToList();
+        Assert.Equal(5, arrivals.Count);
+        Assert.True(
+            arrivals[^1] - arrivals[0] >= TimeSpan.FromMilliseconds(900),
+            "requests beyond 2/s should wait; arrivals: " + string.Join(", ", arrivals.Select(a => a.ToString("HH:mm:ss.fff", System.Globalization.CultureInfo.InvariantCulture))));
+    }
+
     private void Respond(string path, int status, string body) =>
         _server.Given(Request.Create().WithPath(path).UsingGet())
             .RespondWith(Response.Create().WithStatusCode(status).WithBody(body));
@@ -130,7 +175,7 @@ public sealed class BlockCypherClientTests : IDisposable
          "previous_hash":"p","previous_url":"pu","peer_count":1,"unconfirmed_count":0}
         """;
 
-    private IBlockCypherClient CreateClient(string? token = null)
+    private IBlockCypherClient CreateClient(string? token = null, int requestsPerSecond = 100, int requestsPerHour = 1000)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -139,6 +184,8 @@ public sealed class BlockCypherClientTests : IDisposable
             ["BlockCypher:RetryCount"] = "2",
             ["BlockCypher:RetryDelayMilliseconds"] = "10",
             ["BlockCypher:TimeoutSeconds"] = "5",
+            ["BlockCypher:RequestsPerSecond"] = requestsPerSecond.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["BlockCypher:RequestsPerHour"] = requestsPerHour.ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 

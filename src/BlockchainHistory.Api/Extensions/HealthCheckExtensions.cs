@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using System.Text.Json;
+using BlockchainHistory.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -7,16 +8,18 @@ namespace BlockchainHistory.Api.Extensions;
 
 internal static class HealthCheckExtensions
 {
+    public const string BasePath = "/health";
+
     /// <summary>
     /// <c>/health/live</c>: the process is up (runs no checks, so a slow database never restarts the app).
-    /// <c>/health/ready</c>: dependencies tagged "ready" (the database) are reachable.
+    /// <c>/health/ready</c>: dependencies tagged for readiness (the database) are reachable.
     /// </summary>
     public static WebApplication MapHealthEndpoints(this WebApplication app)
     {
-        app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false, ResponseWriter = WriteJsonAsync });
-        app.MapHealthChecks("/health/ready", new HealthCheckOptions
+        app.MapHealthChecks($"{BasePath}/live", new HealthCheckOptions { Predicate = _ => false, ResponseWriter = WriteJsonAsync });
+        app.MapHealthChecks($"{BasePath}/ready", new HealthCheckOptions
         {
-            Predicate = check => check.Tags.Contains("ready"),
+            Predicate = check => check.Tags.Contains(DependencyInjection.ReadinessTag),
             ResponseWriter = WriteJsonAsync,
         });
         return app;

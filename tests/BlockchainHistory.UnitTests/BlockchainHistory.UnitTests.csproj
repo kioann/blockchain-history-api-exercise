@@ -3,4 +3,8 @@
     <ProjectReference Include="..\..\src\BlockchainHistory.Domain\BlockchainHistory.Domain.csproj" />
     <ProjectReference Include="..\..\src\BlockchainHistory.Application\BlockchainHistory.Application.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\TestChainStatus.cs" Link="Shared\TestChainStatus.cs" />
+    <Using Include="BlockchainHistory.Tests.Shared" />
+  </ItemGroup>
 </Project>

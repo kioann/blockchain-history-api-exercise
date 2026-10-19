@@ -1,8 +1,8 @@
 using BlockchainHistory.Domain.Snapshots;
 
-namespace BlockchainHistory.UnitTests;
+namespace BlockchainHistory.Tests.Shared;
 
-/// <summary>Builds realistic <see cref="ChainStatus"/> values for tests.</summary>
+/// <summary>Real BTC and ETH chain states captured from BlockCypher on 2026-10-16 (they match the integration JSON fixtures).</summary>
 internal static class TestChainStatus
 {
     public static ChainStatus Utxo() => new()
@@ -10,7 +10,7 @@ internal static class TestChainStatus
         Name = "BTC.main",
         Height = 971714,
         Hash = "0000000000000000000138485e62e351a291965229fce91e716331049000095b",
-        Time = new DateTimeOffset(2026, 10, 16, 13, 4, 54, TimeSpan.Zero),
+        Time = new DateTimeOffset(2026, 10, 16, 13, 4, 54, TimeSpan.Zero).AddTicks(9635951),
         LatestUrl = "https://api.blockcypher.com/v1/btc/main/blocks/0000000000000000000138485e62e351a291965229fce91e716331049000095b",
         PreviousHash = "000000000000000000001124b83cb51bf2f9b8f74172ef0a5f2eef429a666b27",
         PreviousUrl = "https://api.blockcypher.com/v1/btc/main/blocks/000000000000000000001124b83cb51bf2f9b8f74172ef0a5f2eef429a666b27",
@@ -28,7 +28,7 @@ internal static class TestChainStatus
         Name = "ETH.main",
         Height = 26205424,
         Hash = "c38793292c8b8bc57ab37ad14854b99ac772c770583c354f5d258584ba8e5e74",
-        Time = new DateTimeOffset(2026, 10, 16, 13, 34, 15, TimeSpan.Zero),
+        Time = new DateTimeOffset(2026, 10, 16, 13, 34, 15, TimeSpan.Zero).AddTicks(2488903),
         LatestUrl = "https://api.blockcypher.com/v1/eth/main/blocks/c38793292c8b8bc57ab37ad14854b99ac772c770583c354f5d258584ba8e5e74",
         PreviousHash = "00f4c79287608104c028542af9186d2f64a961dccdb12b846eef0ffe480a66ec",
         PreviousUrl = "https://api.blockcypher.com/v1/eth/main/blocks/00f4c79287608104c028542af9186d2f64a961dccdb12b846eef0ffe480a66ec",

@@ -10,10 +10,8 @@ namespace BlockchainHistory.Api.Contracts;
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property)]
 internal sealed class SupportedBlockchainAttribute : ValidationAttribute
 {
-    private static readonly string Supported = string.Join(", ", BlockchainNetworks.All.Select(n => n.Slug));
-
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) =>
         BlockchainNetworks.TryParse(value as string, out _)
             ? ValidationResult.Success
-            : new ValidationResult($"Unknown blockchain '{value}'. Supported: {Supported}.");
+            : new ValidationResult($"Unknown blockchain '{value}'. Supported: {BlockchainNetworks.SupportedSlugs}.");
 }

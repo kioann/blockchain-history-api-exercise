@@ -37,6 +37,40 @@ public sealed class SnapshotEndpointsTests : IDisposable
     }
 
     [Fact]
+    public async Task ListBlockchains_SourceUrlsUseTheConfiguredBaseUrl()
+    {
+        var networks = await _client.GetFromJsonAsync<JsonElement>("/api/v1/blockchains", Ct);
+
+        var btc = networks.EnumerateArray().Single(n => n.GetProperty("slug").GetString() == "btc-test3");
+        Assert.Equal(BlockchainHistoryApiFactory.BlockCypherBaseUrl + "btc/test3", btc.GetProperty("sourceUrl").GetString());
+    }
+
+    [Fact]
+    public async Task CaptureAll_EveryNetworkDown_Returns503()
+    {
+        _factory.BlockCypher.GetChainAsync(Arg.Any<BlockchainNetwork>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(call => new BlockCypherUnavailableException(call.Arg<BlockchainNetwork>(), "down"));
+
+        var response = await _client.PostAsync("/api/v1/blockchains/snapshots", null, Ct);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Capture_UpstreamDown_DoesNotExposeInternalErrorText()
+    {
+        _factory.BlockCypher.GetChainAsync(BlockchainNetwork.BtcMain, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new BlockCypherUnavailableException(BlockchainNetwork.BtcMain, "No such host: internal-dns-10.0.0.7"));
+
+        var response = await _client.PostAsync("/api/v1/blockchains/btc-main/snapshots", null, Ct);
+
+        var body = await response.Content.ReadAsStringAsync(Ct);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.DoesNotContain("internal-dns", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task PostSnapshot_Returns201WithLocationOfTheNewSnapshot()
     {
         var response = await _client.PostAsync("/api/v1/blockchains/btc-main/snapshots", null, Ct);

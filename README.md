@@ -54,7 +54,8 @@ docker compose up --build
 |---|---|---|
 | `BlockCypher:Token` | *(none)* | BlockCypher API token for a higher quota. **Never commit it**. Use `dotnet user-secrets set "BlockCypher:Token" "<token>" --project src/BlockchainHistory.Api` or the `BlockCypher__Token` environment variable. |
 | `Polling:Enabled` / `Polling:IntervalSeconds` | `false` / `300` | Capture every chain on a schedule. |
-| `RateLimiting:CapturePermitsPerHour` | `20` | Shared hourly budget for capture endpoints (see design notes). |
+| `RateLimiting:CapturePermitsPerHour` | `20` | Hourly budget for API clients on the capture endpoints. |
+| `BlockCypher:RequestsPerSecond` / `BlockCypher:RequestsPerHour` | `3` / `100` | BlockCypher account limits (free tier), applied to every outgoing call. Raise them if you use a token. |
 | `Cors:AllowedOrigins` | `["http://localhost:3000"]` | Browser origins allowed to call the API. |
 | `ConnectionStrings:BlockchainHistory` | `Data Source=data/blockchain-history.db` | SQLite file location. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | *(unset)* | When set, traces, metrics and logs are exported over OTLP. |
@@ -67,7 +68,7 @@ docker compose up --build
 |---|---|---|---|
 | GET | `/api/v1/blockchains` | Supported chains | 200 |
 | POST | `/api/v1/blockchains/{network}/snapshots` | Capture one chain now | 201 + `Location`, 400, 429, 503 |
-| POST | `/api/v1/blockchains/snapshots` | Capture all chains concurrently; partial failures are reported, not fatal | 200, 429 |
+| POST | `/api/v1/blockchains/snapshots` | Capture all chains concurrently; partial failures are reported, not fatal | 200, 429, 503 (none captured) |
 | GET | `/api/v1/blockchains/{network}/snapshots?page=1&pageSize=20` | History, `CreatedAt` descending | 200, 400 |
 | GET | `/api/v1/snapshots/{id}` | One snapshot | 200, 404 |
 | GET | `/health/live`, `/health/ready` | Liveness (process) / readiness (database) | 200, 503 |
@@ -141,9 +142,9 @@ dotnet test
 
 | Project | Scope | Count |
 |---|---|---|
-| `UnitTests` | Domain rules, handlers, validators and mapper in isolation; NSubstitute doubles and `FakeTimeProvider` | 36 |
-| `IntegrationTests` | Our infrastructure against **real** dependencies. A real SQLite database runs the real migration. The real HTTP client and resilience pipeline run against a WireMock server replaying captured BlockCypher responses (retries, 429/503, 404, malformed JSON). | 16 |
-| `FunctionalTests` | The whole API over HTTP in memory (`WebApplicationFactory`), with only BlockCypher and the clock replaced. Covers status codes, ordering, paging, validation, ProblemDetails, rate limiting, CORS, health checks, OpenAPI and concurrent captures. | 22 |
+| `UnitTests` | Domain rules, handlers, validators and mapper in isolation; NSubstitute doubles and `FakeTimeProvider` | 39 |
+| `IntegrationTests` | Our infrastructure against **real** dependencies. A real SQLite database runs the real migration. The real HTTP client and resilience pipeline run against a WireMock server replaying captured BlockCypher responses (retries, 429/503, 404, malformed or null JSON, quota throttling). | 19 |
+| `FunctionalTests` | The whole API over HTTP in memory (`WebApplicationFactory`), with only BlockCypher and the clock replaced. Covers status codes, ordering, paging, validation, ProblemDetails, rate limiting, CORS, health checks, OpenAPI and concurrent captures. | 25 |
 
 CI (`.github/workflows/ci.yml`) builds with warnings as errors, runs all tests, and builds both container images on every push and pull request.
 
@@ -156,8 +157,13 @@ CI (`.github/workflows/ci.yml`) builds with warnings as errors, runs all tests, 
   - Results are added to the `DbContext` sequentially after the fetches complete, because a `DbContext` is not thread-safe.
 - **POST to capture, GET to read.** Reading history never calls BlockCypher, so `GET` stays safe, cacheable and free of side effects.
 - **On-demand capture, plus an optional scheduler.** The brief ties `CreatedAt` to requests to our endpoint, so capture is on demand. A real time series would be evenly spaced, so `SnapshotPollingService` can capture on a schedule (off by default).
-- **Partial success for capture-all.** One chain failing (for example a BlockCypher 429) does not discard the other four. Failures are reported in the response.
-- **Rate limit sized to the upstream quota.** BlockCypher's free tier allows 3 requests a second and 100 an hour. One shared budget of 20 captures an hour (× 5 chains = 100) means we cannot get throttled. Authentication would be the next step.
+- **Partial success for capture-all.** One chain failing (for example a BlockCypher 429) does not discard the other four; failures are reported in the response. If nothing could be captured, the endpoint returns 503, like a single capture.
+- **The upstream quota is enforced where the calls are made.**
+  - BlockCypher's free tier allows 3 requests a second and 100 an hour.
+  - A handler inside the HTTP client's resilience pipeline counts **every** attempt: user captures, scheduled captures and retries. Requests over the per-second rate wait their turn. Requests over the hourly budget fail fast as 503, without calling BlockCypher.
+  - Separately, the API's own rate limiter (20 captures an hour) stops a single client from using up that budget. Authentication would be the next step.
+- **`CreatedAt` is the time the request reached the API.** It is stamped before calling BlockCypher, so retries do not shift it.
+- **Client-facing errors are fixed messages.** Exception details (host names, timeouts) go to logs only.
 - **Raw JSON plus typed columns.** The raw JSON is the faithful source of truth and keeps fields we don't model. Typed columns make queries and indexing possible.
 - **Inheritance where the model is genuinely an "is-a".** Bitcoin-style chains report fees per kB, while Ethereum reports gas prices. Table-per-hierarchy keeps one table and one query path, with a discriminator column.
 - **Repository and Unit of Work over EF Core.** `DbContext` is already a unit of work and repository. The thin, aggregate-specific wrappers exist so the application layer has no EF dependency and is unit-testable. They are deliberately not a generic `IRepository<T>` that leaks `IQueryable`.

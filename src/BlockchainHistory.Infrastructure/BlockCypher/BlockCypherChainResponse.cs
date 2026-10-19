@@ -57,7 +57,10 @@ internal sealed record BlockCypherChainResponse
     };
 }
 
-/// <summary>Compile-time JSON serialisation metadata: no reflection, fewer allocations.</summary>
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
+/// <summary>
+/// Compile-time JSON serialisation metadata: no reflection, fewer allocations.
+/// Nullable annotations are enforced, so a <c>null</c> in a required field fails parsing instead of reaching the database.
+/// </summary>
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower, RespectNullableAnnotations = true)]
 [JsonSerializable(typeof(BlockCypherChainResponse))]
 internal sealed partial class BlockCypherJsonContext : JsonSerializerContext;

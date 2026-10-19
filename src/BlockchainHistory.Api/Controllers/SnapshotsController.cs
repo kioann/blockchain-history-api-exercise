@@ -10,12 +10,14 @@ namespace BlockchainHistory.Api.Controllers;
 [Route("api/v1/snapshots")]
 public sealed class SnapshotsController(ISender sender) : ControllerBase
 {
+    public const string GetByIdRoute = "GetSnapshotById";
+
     /// <summary>Returns one stored snapshot.</summary>
     /// <param name="id">The snapshot id.</param>
     /// <param name="cancellationToken">Aborts the request.</param>
     /// <response code="200">The snapshot.</response>
     /// <response code="404">No snapshot has this id.</response>
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:guid}", Name = GetByIdRoute)]
     [ProducesResponseType<SnapshotDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<SnapshotDto>> GetById(Guid id, CancellationToken cancellationToken)

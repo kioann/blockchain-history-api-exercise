@@ -13,18 +13,35 @@ public sealed class CaptureAllSnapshotsHandlerTests
 {
     private readonly IBlockCypherClient _client = Substitute.For<IBlockCypherClient>();
     private readonly ISnapshotRepository _repository = Substitute.For<ISnapshotRepository>();
+    private static readonly DateTimeOffset Now = new(2026, 10, 16, 12, 0, 0, TimeSpan.Zero);
+
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
+    private readonly FakeTimeProvider _clock = new(Now);
     private readonly CaptureAllSnapshotsHandler _handler;
 
     public CaptureAllSnapshotsHandlerTests()
     {
         _handler = new CaptureAllSnapshotsHandler(
-            _client, _repository, _unitOfWork, new FakeTimeProvider(), NullLogger<CaptureAllSnapshotsHandler>.Instance);
+            _client, _repository, _unitOfWork, _clock, NullLogger<CaptureAllSnapshotsHandler>.Instance);
 
         _client.GetChainAsync(Arg.Any<BlockchainNetwork>(), Arg.Any<CancellationToken>())
             .Returns(call => new ChainFetchResult(
                 call.Arg<BlockchainNetwork>() == BlockchainNetwork.EthMain ? TestChainStatus.Ethereum() : TestChainStatus.Utxo(),
                 "{}"));
+    }
+
+    [Fact]
+    public async Task Handle_StampsCreatedAtWhenTheRequestArrives_NotAfterSlowFetches()
+    {
+        _client.GetChainAsync(BlockchainNetwork.LtcMain, Arg.Any<CancellationToken>()).Returns(_ =>
+        {
+            _clock.Advance(TimeSpan.FromSeconds(30));
+            return new ChainFetchResult(TestChainStatus.Utxo(), "{}");
+        });
+
+        var result = await _handler.Handle(new CaptureAllSnapshotsCommand(), TestContext.Current.CancellationToken);
+
+        Assert.All(result.Captured, s => Assert.Equal(Now, s.CreatedAt));
     }
 
     [Fact]

@@ -20,5 +20,12 @@ public enum ChainModel
     Account,
 }
 
-/// <summary>Static facts about a network: its public slug, BlockCypher path and chain model.</summary>
-public sealed record NetworkInfo(BlockchainNetwork Network, string Slug, string Coin, string Chain, ChainModel Model);
+/// <summary>Static facts about a network: its BlockCypher coin and chain, and its chain model.</summary>
+public sealed record NetworkInfo(BlockchainNetwork Network, string Coin, string Chain, ChainModel Model)
+{
+    /// <summary>Public identifier used in URLs, e.g. <c>btc-test3</c>.</summary>
+    public string Slug => $"{Coin}-{Chain}";
+
+    /// <summary>BlockCypher path relative to its API root, e.g. <c>btc/test3</c>.</summary>
+    public string Path => $"{Coin}/{Chain}";
+}

@@ -15,7 +15,7 @@ public static partial class SnapshotMapper
     [MapPropertyFromSource(nameof(SnapshotDto.EthereumFees), Use = nameof(ToEthereumFees))]
     public static partial SnapshotDto ToDto(BlockchainSnapshot snapshot);
 
-    private static string ToSlug(BlockchainNetwork network) => BlockchainNetworks.Get(network).Slug;
+    private static string ToSlug(BlockchainNetwork network) => network.ToSlug();
 
     private static JsonElement ParseRaw(string rawJson) => JsonSerializer.Deserialize<JsonElement>(rawJson);
 

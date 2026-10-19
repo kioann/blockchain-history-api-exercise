@@ -81,10 +81,10 @@ public sealed class SnapshotRepositoryTests : IAsyncLifetime
 
         Assert.Equal(ethRaw, loadedEth.RawJson);
         Assert.Equal(btcRaw, loadedBtc.RawJson);
-        Assert.Equal(TestData.Ethereum().BaseFee, loadedEth.BaseFee);
-        Assert.Equal(TestData.Utxo().HighFeePerKb, loadedBtc.HighFeePerKb);
+        Assert.Equal(TestChainStatus.Ethereum().BaseFee, loadedEth.BaseFee);
+        Assert.Equal(TestChainStatus.Utxo().HighFeePerKb, loadedBtc.HighFeePerKb);
         Assert.Equal(T0, loadedEth.CreatedAt);
-        Assert.Equal(TestData.Ethereum().Time, loadedEth.Time);
+        Assert.Equal(TestChainStatus.Ethereum().Time, loadedEth.Time);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class SnapshotRepositoryTests : IAsyncLifetime
 
     private async Task<BlockchainSnapshot> SaveAsync(BlockchainNetwork network, DateTimeOffset createdAt, string raw = "{}")
     {
-        var status = BlockchainNetworks.Get(network).Model == ChainModel.Account ? TestData.Ethereum() : TestData.Utxo();
+        var status = BlockchainNetworks.Get(network).Model == ChainModel.Account ? TestChainStatus.Ethereum() : TestChainStatus.Utxo();
         var snapshot = BlockchainSnapshot.Capture(network, status, raw, createdAt);
 
         await using var context = _database.NewContext();

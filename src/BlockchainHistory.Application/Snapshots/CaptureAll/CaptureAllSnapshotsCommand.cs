@@ -1,6 +1,5 @@
 using BlockchainHistory.Application.Abstractions;
 using BlockchainHistory.Domain.Chains;
-using BlockchainHistory.Domain.Snapshots;
 using Mediator;
 using Microsoft.Extensions.Logging;
 
@@ -24,25 +23,24 @@ public sealed partial class CaptureAllSnapshotsHandler(
 {
     public async ValueTask<CaptureAllResult> Handle(CaptureAllSnapshotsCommand command, CancellationToken cancellationToken)
     {
+        var createdAt = timeProvider.GetUtcNow();
+
         // I/O-bound: start every request at once and await them together. No threads are blocked while waiting.
         var fetches = BlockchainNetworks.All.Select(n => FetchAsync(n.Network, cancellationToken));
         var outcomes = await Task.WhenAll(fetches);
 
         // The DbContext is not thread-safe, so snapshots are added one by one after all fetches complete.
-        var createdAt = timeProvider.GetUtcNow();
         var captured = new List<SnapshotDto>();
         var failed = new List<CaptureFailure>();
         foreach (var (network, fetched, error) in outcomes)
         {
             if (fetched is null)
             {
-                failed.Add(new CaptureFailure(BlockchainNetworks.Get(network).Slug, error!));
+                failed.Add(new CaptureFailure(network.ToSlug(), error!));
                 continue;
             }
 
-            var snapshot = BlockchainSnapshot.Capture(network, fetched.Status, fetched.RawJson, createdAt);
-            repository.Add(snapshot);
-            captured.Add(SnapshotMapper.ToDto(snapshot));
+            captured.Add(repository.AddCaptured(network, fetched, createdAt));
         }
 
         if (captured.Count > 0)
@@ -62,7 +60,8 @@ public sealed partial class CaptureAllSnapshotsHandler(
         }
         catch (BlockCypherUnavailableException ex)
         {
-            LogFetchFailed(ex, BlockchainNetworks.Get(network).Slug);
+            var slug = network.ToSlug();
+            LogFetchFailed(ex, slug);
             return (network, null, ex.Message);
         }
     }

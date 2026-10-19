@@ -15,6 +15,9 @@ public static class DependencyInjection
     public const string ConnectionStringName = "BlockchainHistory";
     public const string DefaultConnectionString = "Data Source=data/blockchain-history.db";
 
+    /// <summary>Health checks with this tag must pass before the service reports ready.</summary>
+    public const string ReadinessTag = "ready";
+
     /// <summary>Registers the database, repository, unit of work, BlockCypher client and the database health check.</summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
@@ -24,23 +27,29 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BlockchainHistoryDbContext>());
         services.AddScoped<ISnapshotRepository, SnapshotRepository>();
         services.AddBlockCypherClient(configuration);
-        services.AddHealthChecks().AddDbContextCheck<BlockchainHistoryDbContext>("database", tags: ["ready"]);
+        services.AddHealthChecks().AddDbContextCheck<BlockchainHistoryDbContext>("database", tags: [ReadinessTag]);
 
         return services;
     }
 
-    /// <summary>Registers the typed BlockCypher client with retries (exponential + jitter), timeouts and a circuit breaker.</summary>
+    /// <summary>
+    /// Registers the typed BlockCypher client with retries (exponential + jitter), timeouts, a circuit breaker,
+    /// and the account quota applied to every attempt.
+    /// </summary>
     public static IServiceCollection AddBlockCypherClient(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<BlockCypherOptions>()
             .Bind(configuration.GetSection(BlockCypherOptions.SectionName))
             .Validate(o => o.IsValid(), "BlockCypher settings are invalid.")
             .ValidateOnStart();
+        services.AddSingleton(sp => new BlockCypherQuota(sp.GetRequiredService<IOptions<BlockCypherOptions>>().Value));
+        services.AddTransient<BlockCypherQuotaHandler>();
 
-        services
-            .AddHttpClient<IBlockCypherClient, BlockCypherClient>((sp, http) =>
-                http.BaseAddress = new Uri(sp.GetRequiredService<IOptions<BlockCypherOptions>>().Value.BaseUrl))
-            .AddStandardResilienceHandler()
+        var client = services.AddHttpClient<IBlockCypherClient, BlockCypherClient>((sp, http) =>
+            http.BaseAddress = new Uri(sp.GetRequiredService<IOptions<BlockCypherOptions>>().Value.BaseUrl));
+
+        // Handlers added after the resilience handler sit inside it, so the quota sees every retry attempt.
+        client.AddStandardResilienceHandler()
             .Configure((HttpStandardResilienceOptions resilience, IServiceProvider sp) =>
             {
                 var o = sp.GetRequiredService<IOptions<BlockCypherOptions>>().Value;
@@ -54,6 +63,7 @@ public static class DependencyInjection
                     ? attemptTimeout * 2
                     : TimeSpan.FromSeconds(30);
             });
+        client.AddHttpMessageHandler<BlockCypherQuotaHandler>();
 
         return services;
     }

@@ -32,15 +32,15 @@ internal sealed class BlockCypherClient(HttpClient http, IOptions<BlockCypherOpt
         }
         catch (Exception ex) when (IsProviderFailure(ex, cancellationToken))
         {
-            throw new BlockCypherUnavailableException(network, $"BlockCypher is unavailable for {info.Slug}: {ex.Message}", ex);
+            // The message may reach API clients, so it names the kind of failure; the details stay in the inner exception.
+            throw new BlockCypherUnavailableException(network, $"BlockCypher is unavailable for {info.Slug}: {Describe(ex)}", ex);
         }
     }
 
     private string BuildPath(NetworkInfo info)
     {
-        var path = $"{info.Coin}/{info.Chain}";
         var token = options.Value.Token;
-        return string.IsNullOrWhiteSpace(token) ? path : $"{path}?token={Uri.EscapeDataString(token)}";
+        return string.IsNullOrWhiteSpace(token) ? info.Path : $"{info.Path}?token={Uri.EscapeDataString(token)}";
     }
 
     // Caller cancellation is not a provider failure, so it propagates unchanged.
@@ -49,5 +49,13 @@ internal sealed class BlockCypherClient(HttpClient http, IOptions<BlockCypherOpt
         HttpRequestException or JsonException or ExecutionRejectedException => true,
         OperationCanceledException => !cancellationToken.IsCancellationRequested,
         _ => false,
+    };
+
+    private static string Describe(Exception ex) => ex switch
+    {
+        ExecutionRejectedException => ex.Message,
+        JsonException => "unexpected response format.",
+        HttpRequestException => "could not connect.",
+        _ => "the request timed out.",
     };
 }

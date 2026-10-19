@@ -27,5 +27,5 @@ public sealed class ApplicationMetrics
     }
 
     public void SnapshotCaptured(BlockchainNetwork network) =>
-        _snapshotsCaptured.Add(1, new KeyValuePair<string, object?>("network", BlockchainNetworks.Get(network).Slug));
+        _snapshotsCaptured.Add(1, new KeyValuePair<string, object?>("network", network.ToSlug()));
 }

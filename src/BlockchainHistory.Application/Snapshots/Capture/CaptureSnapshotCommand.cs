@@ -1,6 +1,5 @@
 using BlockchainHistory.Application.Abstractions;
 using BlockchainHistory.Domain.Chains;
-using BlockchainHistory.Domain.Snapshots;
 using Mediator;
 
 namespace BlockchainHistory.Application.Snapshots.Capture;
@@ -16,13 +15,12 @@ public sealed class CaptureSnapshotHandler(
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        // CreatedAt is when the request reached us, not when a possibly retried upstream call finished.
+        var createdAt = timeProvider.GetUtcNow();
         var fetched = await client.GetChainAsync(command.Network, cancellationToken);
-        var snapshot = BlockchainSnapshot.Capture(
-            command.Network, fetched.Status, fetched.RawJson, timeProvider.GetUtcNow());
 
-        repository.Add(snapshot);
+        var snapshot = repository.AddCaptured(command.Network, fetched, createdAt);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return SnapshotMapper.ToDto(snapshot);
+        return snapshot;
     }
 }

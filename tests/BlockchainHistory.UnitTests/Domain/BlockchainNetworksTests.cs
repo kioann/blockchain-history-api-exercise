@@ -36,6 +36,16 @@ public sealed class BlockchainNetworksTests
     }
 
     [Fact]
+    public void SlugAndPath_AreDerivedFromCoinAndChain()
+    {
+        var test3 = BlockchainNetworks.Get(BlockchainNetwork.BtcTest3);
+
+        Assert.Equal("btc-test3", test3.Slug);
+        Assert.Equal("btc/test3", test3.Path);
+        Assert.Equal("btc-test3", BlockchainNetwork.BtcTest3.ToSlug());
+    }
+
+    [Fact]
     public void Get_ReturnsBlockCypherPathAndChainModel()
     {
         var eth = BlockchainNetworks.Get(BlockchainNetwork.EthMain);

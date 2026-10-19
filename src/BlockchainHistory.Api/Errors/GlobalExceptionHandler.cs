@@ -11,6 +11,8 @@ internal sealed partial class GlobalExceptionHandler(
     IProblemDetailsService problemDetails, IHostEnvironment environment, ILogger<GlobalExceptionHandler> logger)
     : IExceptionHandler
 {
+    public const string UpstreamUnavailableTitle = "Upstream blockchain provider unavailable";
+
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
         var problem = exception switch
@@ -40,14 +42,15 @@ internal sealed partial class GlobalExceptionHandler(
 
     private ProblemDetails ToUpstreamProblem(BlockCypherUnavailableException exception)
     {
-        var network = BlockchainNetworks.Get(exception.Network).Slug;
+        var network = exception.Network.ToSlug();
         LogUpstreamUnavailable(exception, network);
 
+        // Clients get a fixed message; the exception and its cause are only logged.
         return new ProblemDetails
         {
             Status = StatusCodes.Status503ServiceUnavailable,
-            Title = "Upstream blockchain provider unavailable",
-            Detail = exception.Message,
+            Title = UpstreamUnavailableTitle,
+            Detail = $"BlockCypher could not provide data for {network}. Try again later.",
             Extensions = { ["network"] = network },
         };
     }
